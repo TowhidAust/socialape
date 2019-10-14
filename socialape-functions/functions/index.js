@@ -17,12 +17,12 @@ const firebaseConfig = {
 };
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
+const db = admin.firestore();
 // firebase config ends
 
 
 app.get("/screams", (request, response) => {
-  admin
-    .firestore()
+  db
     .collection("screams")
     .orderBy("createdAt", "desc")
     .get()
@@ -49,8 +49,7 @@ app.post("/scream", (request, response) => {
     // createdAt: admin.firestore.Timestamp.fromDate(new Date()),
     createdAt: new Date().toISOString(), //converting to actual date format
   };
-  admin
-    .firestore()
+  db
     .collection("screams")
     .add(newScream)
     .then(doc => {
@@ -76,18 +75,32 @@ app.post('/signup', (request, response) => {
     handle: request.body.handle,
   };
   // TODO validate data
-
-
-  firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password).then(data => {
-    return response.status(201).json({
-      message: `user ${data.user.uid} signed up successfully`
-    });
+  db.doc(`/users/${newUser.handle}`).get().then(doc => {
+    if (doc.exists) {
+      return response.status(400).json({
+        handle: 'this handle is already taken'
+      });
+    } else {
+      return firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password);
+    }
   }).catch(function (err) {
-    console.log(err);
+    console.error(err);
     return response.status(500).json({
-      error: err.code
+      error: 'error occured'
     });
   });
+
+
+  // firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password).then(data => {
+  //   return response.status(201).json({
+  //     message: `user ${data.user.uid} signed up successfully`
+  //   });
+  // }).catch(function (err) {
+  //   console.log(err);
+  //   return response.status(500).json({
+  //     error: err.code
+  //   });
+  // });
 });
 
 
