@@ -65,13 +65,16 @@ app.post("/signup", (req, res) => {
     confirmPassword: req.body.confirmPassword,
     handle: req.body.handle,
   };
-  // TODO: validate
+  // TODO: validate data
 
+  let token, userID;
   db.doc(`/users/${newUser.handle}`)
     .get()
     .then(doc => {
       if (doc.exists) {
-        return res.status(400).json({ handle: `this handle is already taken` });
+        return res.status(400).json({
+          handle: `this handle is already taken`
+        });
       } else {
         return firebase
           .auth()
@@ -80,14 +83,38 @@ app.post("/signup", (req, res) => {
     })
     .then(data => {
       // authentication token generate
+      userID = data.user.uid;
       return data.user.getIdToken();
     })
     .then(token => {
-      return res.status(201).json({ token });
+      token = token;
+      const userCredentials = {
+        handle: newUser.handle,
+        email: newUser.email,
+        createdAt: new Date().toISOString(),
+        userID: userID
+      };
+      db.doc(`users/${newUser.handle}`).set(userCredentials);
+      return res.status(201).json({
+        token
+      });
+    }).then(() => {
+      return res.status(201).json({
+        token
+      });
     })
     .catch(err => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      // note that 'auth/email-already-in-use' this string is firebase default error msg. so we are handling it on our own way which is actually a client error 400.
+      if (err.code == 'auth/email-already-in-use') {
+        return res.status(400).json({
+          email: 'Email is already in use'
+        });
+      } else {
+        return res.status(500).json({
+          error: err.code
+        });
+      }
     });
   //   firebase
   //     .auth()
