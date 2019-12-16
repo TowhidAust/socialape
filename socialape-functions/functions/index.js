@@ -18,9 +18,7 @@ firebase.initializeApp(firebaseConfig);
 const db = admin.firestore();
 
 app.get("/screams", (req, res) => {
-  db.collection("screams")
-    .get()
-    .then(data => {
+  db.collection("screams").get().then(data => {
       let screams = [];
       data.forEach(doc => {
         screams.push({
@@ -31,8 +29,7 @@ app.get("/screams", (req, res) => {
         });
       });
       return res.json(screams);
-    })
-    .catch(err => console.error(err));
+    }).catch(err => console.error(err));
 });
 
 app.post("/scream", (req, res) => {
@@ -42,14 +39,11 @@ app.post("/scream", (req, res) => {
     createdAt: new Date().toISOString(),
   };
 
-  db.collection("screams")
-    .add(newScream)
-    .then(doc => {
+  db.collection("screams").add(newScream).then(doc => {
       res.json({
         message: `document ${doc.id} created successfully`,
       });
-    })
-    .catch(err => {
+    }).catch(err => {
       res.status(500).json({
         error: "something went wrong",
       });
@@ -68,9 +62,7 @@ app.post("/signup", (req, res) => {
   // TODO: validate data
 
   let token, userID;
-  db.doc(`/users/${newUser.handle}`)
-    .get()
-    .then(doc => {
+  db.doc(`/users/${newUser.handle}`).get().then(doc => {
       if (doc.exists) {
         return res.status(400).json({
           handle: `this handle is already taken`
@@ -80,14 +72,12 @@ app.post("/signup", (req, res) => {
           .auth()
           .createUserWithEmailAndPassword(newUser.email, newUser.password);
       }
-    })
-    .then(data => {
+    }).then(data => {
       // authentication token generate
       userID = data.user.uid;
       return data.user.getIdToken();
-    })
-    .then(token => {
-      token = token;
+    }).then(idToken => {
+      token = idToken;
       const userCredentials = {
         handle: newUser.handle,
         email: newUser.email,
@@ -95,15 +85,10 @@ app.post("/signup", (req, res) => {
         userID: userID
       };
       db.doc(`users/${newUser.handle}`).set(userCredentials);
-      return res.status(201).json({
-        token
-      });
+      return res.status(201).json({token});
     }).then(() => {
-      return res.status(201).json({
-        token
-      });
-    })
-    .catch(err => {
+      return res.status(201).json({token});
+    }).catch(err => {
       console.error(err);
       // note that 'auth/email-already-in-use' this string is firebase default error msg. so we are handling it on our own way which is actually a client error 400.
       if (err.code == 'auth/email-already-in-use') {
@@ -111,24 +96,13 @@ app.post("/signup", (req, res) => {
           email: 'Email is already in use'
         });
       } else {
-        return res.status(500).json({
-          error: err.code
-        });
+        return res.status(500).json({ error: err.code});
       }
     });
-  //   firebase
-  //     .auth()
-  //     .createUserWithEmailAndPassword(newUser.email, newUser.password)
-  //     .then(data => {
-  //       return res
-  //         .status(201)
-  //         .json({ message: `user ${data.user.uid} signed up successfully` });
-  //     })
-  //     .catch(err => {
-  //       console.error(err);
-  //       return res.status(500).json({ error: err.code });
-  //     });
 });
 
-// exports.api = functions.region('europe-west1').https.onRequest(app);
+/**
+ * if you want to change the region.. dothis--> 
+ * ? exports.api = functions.region('europe-west1').https.onRequest(app);
+*/
 exports.api = functions.https.onRequest(app);
