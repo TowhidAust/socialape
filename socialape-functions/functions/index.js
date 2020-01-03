@@ -59,7 +59,7 @@ app.post("/scream", (req, res) => {
 const isEmail = (email) => {
   //got this email regex exp link from: 'https://pastebin.com/f33g85pd'
   const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  (email.match(emailRegEx)) ? true : false;
+  if(email.match(emailRegEx)) {return true}  else {return false};
 }
 const isEmpty = (string) =>{
   // to make sure the string is not empty
@@ -87,6 +87,7 @@ app.post("/signup", (req, res) => {
   }
 
   if(isEmpty(newUser.password)) errors.password = 'Must not be empty';
+  if(isEmpty(newUser.confirmPassword)) errors.password = 'Must not be empty';
   if(newUser.password != newUser.confirmPassword) errors.confirmPassword = 'Password Must match';
   if(isEmpty(newUser.handle))  errors.handle = 'Must not be empty'; 
   if(Object.keys(errors).length > 0)  res.status(400).json(errors);
@@ -129,6 +130,25 @@ app.post("/signup", (req, res) => {
         return res.status(500).json({ error: err.code});
       }
     });
+});
+
+// login route
+app.post("/login", (req,res)=>{
+  const user = {
+    email:  req.body.email,
+    password: req.body.password,
+  }
+  let errors = {};
+  if(isEmpty(user.email)) errors.email = 'Email must not be empty';
+  if(isEmpty(user.password)) errors.password = "Password must not be empty";
+  if(Object.keys(errors).length > 0) return res.status(400).json(errors);
+  firebase.auth().signInWithEmailAndPassword(user.email, user.password).then(data => {
+    return data.user.getIdToken();
+  }).then(token =>{
+    return res.json({token})
+  }).catch(err=>{
+    return res.status(500).json({error: err.code});
+  })
 });
 
 /**
