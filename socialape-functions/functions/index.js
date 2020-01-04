@@ -147,7 +147,12 @@ app.post("/login", (req,res)=>{
   }).then(token =>{
     return res.json({token})
   }).catch(err=>{
-    return res.status(500).json({error: err.code});
+    if(err.code == "auth/wrong-password") {
+      return res.status(403).json({general: 'Wrong credentials, Please try again.'});
+    } else{
+      return res.status(500).json({error: err.code});
+    }
+    
   })
 });
 
@@ -155,4 +160,5 @@ app.post("/login", (req,res)=>{
  * if you want to change the region.. dothis--> 
  * ? exports.api = functions.region('europe-west1').https.onRequest(app);
 */
+
 exports.api = functions.https.onRequest(app);
