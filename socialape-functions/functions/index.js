@@ -51,7 +51,6 @@ app.post("/scream", (req, res) => {
     });
 });
 
-<<<<<<< HEAD
 /**
  * ?------------------------------------------------------------------
  * ? Helper functions starts here
@@ -71,8 +70,6 @@ const isEmpty = (string) =>{
  * ? Helper functions ends here
  * ? -----------------------------------------------------------------
  */
-=======
->>>>>>> parent of 7ad8eb4... user input validation
 // signup route
 app.post("/signup", (req, res) => {
   const newUser = {
@@ -82,7 +79,6 @@ app.post("/signup", (req, res) => {
     handle: req.body.handle,
   };
   // TODO: validate data
-<<<<<<< HEAD
   let errors = {};
   if(isEmpty(newUser.email)){
     errors.email = 'Must not be empty'
@@ -95,8 +91,6 @@ app.post("/signup", (req, res) => {
   if(newUser.password != newUser.confirmPassword) errors.confirmPassword = 'Password Must match';
   if(isEmpty(newUser.handle))  errors.handle = 'Must not be empty'; 
   if(Object.keys(errors).length > 0)  res.status(400).json(errors);
-=======
->>>>>>> parent of 7ad8eb4... user input validation
 
   let token, userID;
   db.doc(`/users/${newUser.handle}`).get().then(doc => {
