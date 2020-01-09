@@ -2,7 +2,11 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const express = require("express");
 const app = express();
-admin.initializeApp();
+var serviceAccount = require("F:/firebaseFunctions/socialape-cc6b6-firebase-adminsdk-fc9lm-aad2ecd548.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://socialape-cc6b6.firebaseio.com"
+});
 const firebaseConfig = {
   apiKey: "AIzaSyCfQse-CxyLUvD3W-K_J-bWLMggWcq_7Ks",
   authDomain: "socialape-cc6b6.firebaseapp.com",
@@ -38,16 +42,25 @@ const FBAuth = (req,res,next) => {
   let idToken;
   if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
     idToken = req.headers.authorization.split('Bearer ')[1];
+    console.log('---id token---',idToken);
 
   } else{
     console.error('No token found');
     return res.status(403).json({error: 'Unauthorized'});
   }
 
+  console.log('---before varifying idToken is---', idToken);
   admin.auth().verifyIdToken(idToken).then(decodedToken=>{
+    console.log('-----------req body parameters-------',req.body);
+    
+   
     req.user = decodedToken;
+    console.log('----clg---',req.user);
+    // console.log('the request parameters-----------',req);
     return db.collection('users').where('userId', '==', req.user.uid).limit(1).get();
   }).then(data=>{
+    console.log('--------data------', data);
+  
     req.user.handle = data.docs[0].data().handle;
     return next();
   }).catch(err=>{
@@ -58,6 +71,7 @@ const FBAuth = (req,res,next) => {
 
 // post one scream
 app.post("/scream",FBAuth, (req, res) => {
+
   const newScream = {
     body: req.body.body,
     userHandle: req.user.handle,
