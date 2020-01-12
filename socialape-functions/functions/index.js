@@ -50,7 +50,7 @@ const FBAuth = (req,res,next) => {
   admin.auth().verifyIdToken(idToken).then(decodedToken => {
     req.user = decodedToken;
     console.log('----req.user---',req.user);
-    return db.collection('users').where('userId', '==', req.user.uid).limit(1).get();
+    return db.collection('users').where('userID', '==', req.user.uid).limit(1).get();
   }).then(data=>{
     req.user.handle = data.docs[0].data().handle;
     return next();
@@ -64,7 +64,7 @@ const FBAuth = (req,res,next) => {
 app.post("/scream", FBAuth, (req, res) => {
   const newScream = {
     body: req.body.body,
-    userHandle: req.body.handle,
+    userHandle: req.user.handle,
     createdAt: new Date().toISOString(),
   };
 
