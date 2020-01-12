@@ -47,19 +47,11 @@ const FBAuth = (req,res,next) => {
     console.error('No token found');
     return res.status(403).json({error: 'Unauthorized'});
   }
-
-  console.log('---before varifying idToken is---', idToken);
-  admin.auth().verifyIdToken(idToken).then(decodedToken=>{
-    console.log('-----------req body parameters-------',req.body);
-    
-   
+  admin.auth().verifyIdToken(idToken).then(decodedToken => {
     req.user = decodedToken;
-    console.log('----clg---',req.user);
-    // console.log('the request parameters-----------',req);
+    console.log('----req.user---',req.user);
     return db.collection('users').where('userId', '==', req.user.uid).limit(1).get();
   }).then(data=>{
-    console.log('--------data------', data);
-  
     req.user.handle = data.docs[0].data().handle;
     return next();
   }).catch(err=>{
@@ -69,13 +61,14 @@ const FBAuth = (req,res,next) => {
 }
 
 // post one scream
-app.post("/scream",FBAuth, (req, res) => {
-
+app.post("/scream", FBAuth, (req, res) => {
   const newScream = {
     body: req.body.body,
-    userHandle: req.user.handle,
+    userHandle: req.body.handle,
     createdAt: new Date().toISOString(),
   };
+
+  console.log('this is a new scream', newScream);
 
   db.collection("screams").add(newScream).then(doc => {
       res.json({
