@@ -49,7 +49,6 @@ const FBAuth = (req,res,next) => {
   }
   admin.auth().verifyIdToken(idToken).then(decodedToken => {
     req.user = decodedToken;
-    console.log('----req.user---',req.user);
     return db.collection('users').where('userID', '==', req.user.uid).limit(1).get();
   }).then(data=>{
     req.user.handle = data.docs[0].data().handle;
