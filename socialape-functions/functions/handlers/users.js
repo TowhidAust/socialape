@@ -1,4 +1,4 @@
-const {db} = require('../util/admin');
+const {admin, db} = require('../util/admin');
 const config = require('../util/config');
 const firebase = require('firebase');
 firebase.initializeApp(config);
@@ -91,4 +91,58 @@ exports.login = (req,res)=>{
       }
       
     })
+}
+
+
+// here we are using busboy npm package to upload an image
+exports.uploadImage = (req,res) => {
+  const busboy = require('busboy');
+  const path = require('path');
+  const os = require('os');
+  const fs = require('fs'); 
+
+  const busboy = new Busboy({headers: req.headers});
+  let imageFileName;
+  let imageToBeUploaded = {};
+
+
+  busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+    console.log(fieldname);
+    console.log(filename);
+    console.log(mimetype);
+    // console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+
+    const imageExtension = filename.split('.')[filename.split('.').length-1];
+    const imageFileName = `${Math.round(Math.random()*10000000000)}.${imageExtension}`; //output sample: 459847502075.png
+    const filepath = path.join(os.tmpdir(), imageFileName);
+    imageToBeUploaded = {filepath, mimetype};
+    file.pipe(fs.createWriteStream(filepath));
+
+    busboy.on('finish', function() { 
+      // console.log('Done parsing form!');
+      // res.writeHead(303, { Connection: 'close', Location: '/' });
+      // res.end();
+      admin.storage().bucket().upload(imageToBeUploaded.filepath, {
+        resumable: false,
+        metadata: {
+          metadata: {
+            contentType: imageToBeUploaded.mimetype
+          }
+        }
+      }).then(()=>{
+        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+        // add this user to database user doc
+
+        return db.doc(`/users/${req.user.handle}`).update({imageUrl: imageUrl});
+      }).then(()=>{
+        return res.json({message: `image uploaded successfully`});
+      }).catch(err=>{
+        console.error(err);
+        res.status(500).json({error: err.code});
+      });
+    });
+
+  });
+  
+
 }
