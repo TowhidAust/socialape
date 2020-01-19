@@ -2,8 +2,10 @@ const {admin, db} = require('../util/admin');
 const config = require('../util/config');
 const firebase = require('firebase');
 firebase.initializeApp(config);
-const { validateSignupData, validateLoginData } = require('../util/validator');
+const { validateSignupData, validateLoginData,  reduceUserDetails} = require('../util/validator');
 
+
+// signup user
 exports.signup = (req, res) => {
  
     console.log('signup route triggered');
@@ -66,7 +68,7 @@ exports.signup = (req, res) => {
 }
 
 
-
+// log user in
 exports.login = (req,res)=>{
     const user = {
       email:  req.body.email,
@@ -95,6 +97,16 @@ exports.login = (req,res)=>{
 }
 
 
+exports.addUserDetails = (req, res) =>{
+  let userDetails = reduceUserDetails(req.body);
+  db.doc(`/users/${req.user.handle}`).update(userDetails).then(()=>{
+    return res.json({message:'details added successfully'});
+  }).catch(err=>{
+    console.error(err);
+    return res.status(500).json({error: err.code});
+  })
+}
+
 // here we are using busboy npm package to upload an image
 exports.uploadImage = (req,res) => {
   const BusBoy = require('busboy');
@@ -108,10 +120,11 @@ exports.uploadImage = (req,res) => {
 
 
   busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-    console.log('fieldName--',fieldname);
-    console.log('filename--',filename);
-    console.log('mimetype--',mimetype);
-    // console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+    
+    // if the file is not an image just end up here
+   if(mimetype != 'image/jpeg' && mimetype != 'image/png'){
+     return res.status(400).json({error: `Wrong filetype submitted`});
+   }
 
     const imageExtension = filename.split('.')[filename.split('.').length-1];
      imageFileName = `${Math.round(Math.random()*10000000000)}.${imageExtension}`; //output sample: 459847502075.png
@@ -123,13 +136,7 @@ exports.uploadImage = (req,res) => {
   });
 
 
-
-
   busboy.on('finish', function() { 
-    console.log('entered into finish callback--');
-    // console.log('Done parsing form!');
-    // res.writeHead(303, { Connection: 'close', Location: '/' });
-    // res.end();
     admin.storage().bucket().upload(imageToBeUploaded.filepath, {
       resumable: false,
       metadata: {
@@ -140,8 +147,6 @@ exports.uploadImage = (req,res) => {
     }).then(()=>{
       const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
       // add this user to database user doc
-
-      console.log('imageUrl', imageUrl);
       return db.doc(`/users/${req.user.handle}`).update({imageUrl: imageUrl});
     }).then(()=>{
       return res.json({message: `image uploaded successfully`});

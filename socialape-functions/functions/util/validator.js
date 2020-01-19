@@ -3,12 +3,12 @@ const isEmail = (email) => {
     const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if(email.match(emailRegEx)) {return true}  else {return false};
   }
-  const isEmpty = (string) =>{
+const isEmpty = (string) =>{
     // to make sure the string is not empty
     if(string.trim() === ''){ return  true} else{ return false}
-  }
+}
 
-  exports.validateSignupData = (data) => {
+exports.validateSignupData = (data) => {
     let errors = {};
     if(isEmpty(data.email)){
       errors.email = 'Must not be empty'
@@ -25,10 +25,9 @@ const isEmail = (email) => {
         errors,
         valid: Object.keys(errors).length === 0 ? true : false
     }
-  } 
-  
-  
-  exports.validateLoginData = (data) => {
+} 
+
+exports.validateLoginData = (data) => {
     let errors = {};
     if(isEmpty(data.email)) errors.email = 'Email must not be empty';
     if(isEmpty(data.password)) errors.password = "Password must not be empty";
@@ -37,4 +36,20 @@ const isEmail = (email) => {
         errors,
         valid: Object.keys(errors).length === 0 ? true: false
     }
+}
+
+exports.reduceUserDetails = (data)=>{
+  // bio website and a location
+  let userDetails = {};
+  if (!isEmpty(data.bio.trim())) userDetails.bio = data.bio;
+  if (!isEmpty(data.website.trim())) {
+    // https:website.com
+    if(data.website.trim().substring(0,4)!=='http'){
+      userDetails.website = `http://${data.website.trim()}`;
+
+    }else userDetails.website = data.website;
   }
+  if (!isEmpty(data.location.trim())) userDetails.location = data.location;
+
+  return userDetails;
+}
