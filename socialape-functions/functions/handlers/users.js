@@ -113,9 +113,7 @@ exports.uploadImage = (req,res) => {
 
 
   busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-    console.log('fieldName--',fieldname);
-    console.log('filename--',filename);
-    console.log('mimetype--',mimetype);
+  
     // console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
 
     const imageExtension = filename.split('.')[filename.split('.').length-1];
@@ -131,10 +129,6 @@ exports.uploadImage = (req,res) => {
 
 
   busboy.on('finish', function() { 
-    console.log('entered into finish callback--');
-    // console.log('Done parsing form!');
-    // res.writeHead(303, { Connection: 'close', Location: '/' });
-    // res.end();
     admin.storage().bucket().upload(imageToBeUploaded.filepath, {
       resumable: false,
       metadata: {
@@ -146,7 +140,6 @@ exports.uploadImage = (req,res) => {
       const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
       // add this user to database user doc
 
-      console.log('imageUrl', imageUrl);
       return db.doc(`/users/${req.user.handle}`).update({imageUrl: imageUrl});
     }).then(()=>{
       return res.json({message: `image uploaded successfully`});
