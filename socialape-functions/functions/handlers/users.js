@@ -2,7 +2,7 @@ const {admin, db} = require('../util/admin');
 const config = require('../util/config');
 const firebase = require('firebase');
 firebase.initializeApp(config);
-const { validateSignupData, validateLoginData } = require('../util/validator');
+const { validateSignupData, validateLoginData,reduceUserDetails } = require('../util/validator');
 
 exports.signup = (req, res) => {
  
@@ -90,6 +90,15 @@ exports.login = (req,res)=>{
     })
 }
 
+exports.addUserDetails = (req, res) =>{
+  let userDetails = reduceUserDetails(req.body);
+  db.doc(`/users/${req.user.handle}`).update(userDetails).then(()=>{
+    return res.json({message:'details added successfully'});
+  }).catch(err=>{
+    console.error(err);
+    return res.status(500).json({error: err.code});
+  })
+}
 
 // here we are using busboy npm package to upload an image
 exports.uploadImage = (req,res) => {
