@@ -74,13 +74,9 @@ exports.login = (req,res)=>{
       email:  req.body.email,
       password: req.body.password,
     }
-
-
      // destructuring from validator.js helper funtions
      const {valid, errors} = validateLoginData(user);
      if(!valid) res.status(400).json(errors);
-
-    
 
     firebase.auth().signInWithEmailAndPassword(user.email, user.password).then(data => {
       return data.user.getIdToken();
