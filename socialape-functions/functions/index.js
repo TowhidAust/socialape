@@ -3,7 +3,7 @@ const functions = require("firebase-functions");
 const express = require("express");
 const app = express();
 const {getAllScreams, postOneScream} = require('./handlers/screams');
-const {signup,login, addUserDetails, uploadImage} = require('./handlers/users');
+const {signup,login, addUserDetails, uploadImage, getAuthenticatedUser} = require('./handlers/users');
 const FBAuth = require('./util/fbAuth'); //middleware
 
 // scream routes
@@ -14,6 +14,7 @@ app.post("/signup", signup);
 app.post("/login", login);
 app.post("/user/image",FBAuth, uploadImage);
 app.post('/user', FBAuth, addUserDetails);
+app.get('/user', FBAuth, getAuthenticatedUser);
 
 // agasd 
 

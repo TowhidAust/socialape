@@ -23,7 +23,7 @@ let db = {
 };
 
 const userDetails = {
-  // ? redux data
+  // ?  redux data
   credentials: {
       userId: 'dh23ggj5h32g54yug34g',
       email: 'user@gmail.com',

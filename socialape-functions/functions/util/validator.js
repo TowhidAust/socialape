@@ -39,6 +39,7 @@ const isEmail = (email) => {
     }
   }
 
+  // for user details
   exports.reduceUserDetails = (data)=>{
     // bio website and a location
     let userDetails = {};

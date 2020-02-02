@@ -112,20 +112,16 @@ exports.uploadImage = (req,res) => {
   let imageToBeUploaded = {};
 
 
-  busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-  
-    // console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
 
+//* used busboy npm package to detect the upload finish, image mimetype etc.
+  busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {  
+    // console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
     const imageExtension = filename.split('.')[filename.split('.').length-1];
      imageFileName = `${Math.round(Math.random()*10000000000)}.${imageExtension}`; //output sample: 459847502075.png
     const filepath = path.join(os.tmpdir(), imageFileName);
-    console.log('filepath--',filepath);
     imageToBeUploaded = {filepath, mimetype};
-    console.log('imageToBeUploaded',imageToBeUploaded);
     file.pipe(fs.createWriteStream(filepath));
   });
-
-
 
 
   busboy.on('finish', function() { 
@@ -150,4 +146,30 @@ exports.uploadImage = (req,res) => {
   });
   
   busboy.end(req.rawBody);
+}
+
+exports.getAuthenticatedUser = (req,res) => {
+  console.log('entered into get authenticated user');
+  let userData = {};
+  db.doc(`users/${req.user.handle}`).get().then((doc)=>{
+    if(doc.exists){
+      console.log('doc exists');
+      userData.credentials = doc.data();
+      console.log(userData);
+      return db.collection('likes').where('userHandle', '==', req.user.handle).get();
+    }
+    console.log('doc doesnt exists');
+  }).then((data)=>{
+    console.log('entered into then block');
+    userData.likes = [];
+    data.forEach((doc)=>{
+      userData.likes.push(doc.data());
+    });
+    console.log(userData.likes);
+
+    return res.json(userData);
+  }).catch((err)=>{
+    console.error(err);
+    res.status(500).json({error: error.code});
+  })
 }
